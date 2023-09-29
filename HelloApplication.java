@@ -13,6 +13,8 @@ import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
 
 public class HelloApplication extends Application {
+    static int userID;
+    static String userName;
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
@@ -22,7 +24,6 @@ public class HelloApplication extends Application {
             Connection connection = DriverManager.getConnection(jdbcURL, username, password);
             if (connection != null) {
                 System.out.println("Connected to the database!");
-                retrieveData();
                 connection.close();
             }
         } catch (SQLException e) {
@@ -30,21 +31,6 @@ public class HelloApplication extends Application {
             e.printStackTrace();
         }
         launch(args);
-    }
-
-    private static void retrieveData() {
-        String sql = "SELECT * FROM exercises";
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
-            while (resultSet.next()) {
-                String column1Value = resultSet.getString("exercise_name");
-                String column2Value = resultSet.getString("description");
-                System.out.println("Column1: " + column1Value + ", Column2: " + column2Value);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -95,7 +81,7 @@ public class HelloApplication extends Application {
 
             if (authenticate(username, password)) {
                 showAlert("Login Successful", "Welcome, " + username + "!");
-                // You can navigate to the main fitness tracker screen here
+                showNewPage();
             } else {
                 showAlert("Login Failed", "Invalid username or password.");
             }
@@ -120,6 +106,63 @@ public class HelloApplication extends Application {
         primaryStage.show();
     }
 
+    private void showNewPage() {
+        Stage newStage = new Stage();
+        newStage.setTitle("Fitness Tracker Page");
+        BorderPane borderPane = new BorderPane();
+        borderPane.setStyle("-fx-background-color: #d0bdf4;");
+        VBox topVBox = new VBox(10);
+        topVBox.setPadding(new Insets(20, 20, 20, 20));
+        topVBox.setAlignment(Pos.TOP_LEFT);
+        Label welcomeLabel = new Label("Hello "+userName);
+        welcomeLabel.setStyle("-fx-font-size: 23px;");
+        topVBox.getChildren().add(welcomeLabel);
+        borderPane.setTop(topVBox);
+        StringBuilder exerciseLogText = new StringBuilder();
+        try (Connection connection = connectToDatabase();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT log_id, exercise_id, log_date, duration_minutes, sets, reps, notes " +
+                             "FROM exercise_logs " +
+                             "WHERE user_id = ?")) {
+
+            statement.setInt(1, userID);
+            ResultSet resultSet = statement.executeQuery();
+            Label loginPageLabel = new Label("Exercise Logs :");
+            loginPageLabel.setStyle("-fx-font-size: 23px;");
+            while (resultSet.next()) {
+                int logId = resultSet.getInt("log_id");
+                int exerciseID = resultSet.getInt("exercise_id");
+                String exerciseDate = resultSet.getString("log_date");
+                int durationMinutes = resultSet.getInt("duration_minutes");
+
+                exerciseLogText.append("Log ID: ").append(logId).append("\n");
+                exerciseLogText.append("Exercise ID: ").append(exerciseID).append("\n");
+                exerciseLogText.append("Exercise Date: ").append(exerciseDate).append("\n");
+                exerciseLogText.append("Duration (minutes): ").append(durationMinutes).append("\n\n");
+            }
+
+            statement.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.out.println("Error fetching exercise logs: " + e.getMessage());
+        }
+        Label exerciseLogLabel = new Label(exerciseLogText.toString());
+        exerciseLogLabel.setStyle("-fx-font-size: 16px;");
+        borderPane.setLeft(exerciseLogLabel);
+
+        Screen screen = Screen.getPrimary();
+        Rectangle2D bounds = screen.getVisualBounds();
+        newStage.setWidth(bounds.getWidth() * 0.9);
+        newStage.setHeight(bounds.getHeight() * 0.9);
+
+        newStage.setX((bounds.getWidth() - newStage.getWidth()) / 2);
+        newStage.setY((bounds.getHeight() - newStage.getHeight()) / 2);
+
+        Scene blankScene = new Scene(borderPane);
+        newStage.setScene(blankScene);
+        newStage.show();
+    }
+
     private static Connection connectToDatabase() throws SQLException {
         return DriverManager.getConnection(jdbcURL, username, password);
     }
@@ -127,7 +170,7 @@ public class HelloApplication extends Application {
     private static boolean authenticate(String username, String password) {
         try (Connection connection = connectToDatabase();
              PreparedStatement statement = connection.prepareStatement(
-                     "SELECT password_hash FROM users WHERE username = ?")) {
+                     "SELECT username,user_id, password_hash FROM users WHERE username = ?")) {
 
             statement.setString(1, username);
 
@@ -135,7 +178,8 @@ public class HelloApplication extends Application {
 
             if (resultSet.next()) {
                 String storedPassword = resultSet.getString("password_hash");
-
+                userID = resultSet.getInt("user_id");
+                userName= resultSet.getString("username");
                 if (storedPassword.equals(password)) {
                     return true;
                 }
