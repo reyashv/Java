@@ -8,6 +8,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
@@ -114,31 +116,52 @@ public class HelloApplication extends Application {
         VBox topVBox = new VBox(10);
         topVBox.setPadding(new Insets(20, 20, 20, 20));
         topVBox.setAlignment(Pos.TOP_LEFT);
-        Label welcomeLabel = new Label("Hello "+userName);
+        Label welcomeLabel = new Label("Hello " + userName);
         welcomeLabel.setStyle("-fx-font-size: 23px;");
         topVBox.getChildren().add(welcomeLabel);
         borderPane.setTop(topVBox);
+
+        // Create a VBox for the exercise logs
+        VBox exerciseLogBox = new VBox(10);
+        exerciseLogBox.setPadding(new Insets(20, 20, 20, 20));
+        exerciseLogBox.setStyle("-fx-background-color: #ffffff;"); // Set background color
+        exerciseLogBox.setAlignment(Pos.TOP_LEFT);
+
+        // Add a heading label for exercise logs
+        Label exerciseLogsHeading = new Label("Exercise Logs");
+        exerciseLogsHeading.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        exerciseLogBox.getChildren().add(exerciseLogsHeading);
+
         StringBuilder exerciseLogText = new StringBuilder();
         try (Connection connection = connectToDatabase();
              PreparedStatement statement = connection.prepareStatement(
-                     "SELECT log_id, exercise_id, log_date, duration_minutes, sets, reps, notes " +
-                             "FROM exercise_logs " +
-                             "WHERE user_id = ?")) {
+                     "SELECT el.log_id, el.log_date, el.duration_minutes, el.sets, el.reps, el.notes, " +
+                             "ex.exercise_id, ex.exercise_name, ex.description,ex.muscle_group, ex.calorie_burn_per_minute " +
+                             "FROM exercise_logs el " +
+                             "INNER JOIN exercises ex ON el.exercise_id = ex.exercise_id " +
+                             "WHERE el.user_id = ?")) {
 
             statement.setInt(1, userID);
             ResultSet resultSet = statement.executeQuery();
-            Label loginPageLabel = new Label("Exercise Logs :");
-            loginPageLabel.setStyle("-fx-font-size: 23px;");
+            Label exerciseLogLabel = new Label();
             while (resultSet.next()) {
                 int logId = resultSet.getInt("log_id");
                 int exerciseID = resultSet.getInt("exercise_id");
                 String exerciseDate = resultSet.getString("log_date");
                 int durationMinutes = resultSet.getInt("duration_minutes");
+                String exerciseName = resultSet.getString("exercise_name");
+                String description = resultSet.getString("description");
+                String muscleGroup = resultSet.getString("muscle_group");
+                String calorieburn = resultSet.getString("calorie_burn_per_minute");
 
                 exerciseLogText.append("Log ID: ").append(logId).append("\n");
-                exerciseLogText.append("Exercise ID: ").append(exerciseID).append("\n");
                 exerciseLogText.append("Exercise Date: ").append(exerciseDate).append("\n");
-                exerciseLogText.append("Duration (minutes): ").append(durationMinutes).append("\n\n");
+                exerciseLogText.append("Duration (minutes): ").append(durationMinutes).append("\n");
+                exerciseLogText.append("Exercise Name: ").append(exerciseName).append("\n");
+                exerciseLogText.append("Description: ").append(description).append("\n");
+                exerciseLogText.append("Muscle Group: ").append(muscleGroup).append("\n");
+                exerciseLogText.append("Calories burnt per minute: ").append(calorieburn).append("\n\n");
+
             }
 
             statement.close();
@@ -146,9 +169,72 @@ public class HelloApplication extends Application {
         } catch (SQLException e) {
             System.out.println("Error fetching exercise logs: " + e.getMessage());
         }
+
+        // Create a Label to display exercise logs
         Label exerciseLogLabel = new Label(exerciseLogText.toString());
         exerciseLogLabel.setStyle("-fx-font-size: 16px;");
-        borderPane.setLeft(exerciseLogLabel);
+
+        // Add the exercise log Label to the exercise log VBox
+        exerciseLogBox.getChildren().addAll(exerciseLogLabel);
+
+        // Create a VBox for fitness goals
+        VBox fitnessGoalsBox = new VBox(10);
+        fitnessGoalsBox.setPadding(new Insets(20, 20, 20, 20));
+        fitnessGoalsBox.setStyle("-fx-background-color: #ffffff;"); // Set background color
+        fitnessGoalsBox.setAlignment(Pos.TOP_LEFT);
+
+        // Add a heading label for fitness goals
+        Label fitnessGoalsHeading = new Label("Fitness Goals");
+        fitnessGoalsHeading.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        fitnessGoalsBox.getChildren().add(fitnessGoalsHeading);
+
+        StringBuilder fitnessGoalsText = new StringBuilder();
+        try (Connection connection = connectToDatabase();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT goal_id, goal_type, target_value, target_date, achieved " +
+                             "FROM fitness_goals " +
+                             "WHERE user_id = ?")) {
+
+            statement.setInt(1, userID);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int goalId = resultSet.getInt("goal_id");
+                String goalType = resultSet.getString("goal_type");
+                int TargetValue = resultSet.getInt("target_value");
+                String targetDate = resultSet.getString("target_date");
+                boolean target = resultSet.getBoolean("achieved");
+
+                fitnessGoalsText.append("Goal ID: ").append(goalId).append("\n");
+                fitnessGoalsText.append("Goal Type: ").append(goalType).append("\n");
+                fitnessGoalsText.append("Target Value: ").append(TargetValue).append("\n");
+                fitnessGoalsText.append("Target Date: ").append(targetDate).append("\n");
+                fitnessGoalsText.append("Target: ").append(target).append("\n\n");
+            }
+
+            statement.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.out.println("Error fetching fitness goals: " + e.getMessage());
+        }
+
+        // Create a Label to display fitness goals
+        Label fitnessGoalsLabel = new Label(fitnessGoalsText.toString());
+        fitnessGoalsLabel.setStyle("-fx-font-size: 16px;");
+
+        // Add the fitness goals Label to the fitness goals VBox
+        fitnessGoalsBox.getChildren().addAll(fitnessGoalsLabel);
+
+        // Create an HBox to hold both exercise logs and fitness goals boxes
+        HBox contentBox = new HBox(20);
+        contentBox.setPadding(new Insets(20, 20, 20, 20));
+        contentBox.setAlignment(Pos.TOP_LEFT);
+
+        // Add exercise logs and fitness goals boxes to the content HBox
+        contentBox.getChildren().addAll(exerciseLogBox, fitnessGoalsBox);
+
+        // Set the content HBox in the center of the BorderPane
+        borderPane.setCenter(contentBox);
 
         Screen screen = Screen.getPrimary();
         Rectangle2D bounds = screen.getVisualBounds();
@@ -162,6 +248,7 @@ public class HelloApplication extends Application {
         newStage.setScene(blankScene);
         newStage.show();
     }
+
 
     private static Connection connectToDatabase() throws SQLException {
         return DriverManager.getConnection(jdbcURL, username, password);
