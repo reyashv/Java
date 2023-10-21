@@ -1,0 +1,38 @@
+package com.example.jproject;
+
+public class Logs {
+    private int LogID;
+    private String LogDate;
+    private int duration;
+
+    public Logs() {
+        LogID=0;
+        LogDate="01-02-2003";
+        duration=30;
+    }
+
+    public void setLogID(int logID) {
+        this.LogID = logID;
+    }
+
+    public void setLogDate(String logDate) {
+        LogDate = logDate;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public String getLogDate() {
+        return LogDate;
+    }
+
+    public int getLogID() {
+        return LogID;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+}
+
