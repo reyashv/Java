@@ -1,16 +1,20 @@
 package com.example.jproject;
+import java.io.IOException;
 import java.lang.*;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
 
 import java.sql.*;
 
-public class LoginController {
+public class LoginController{
     @FXML
     private TextField usernameField;
     @FXML
@@ -20,16 +24,26 @@ public class LoginController {
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
-
-    public void handleLoginButtonAction(ActionEvent event) {
-        String username = usernameField.getText();
+    String username1;
+    public void handleLoginButtonAction(ActionEvent event) throws IOException {
+        username1 = usernameField.getText();
         String password = passwordField.getText();
-        System.out.println(username+password);
-
-        if (authenticate(username, password)) {
-            showAlert("Login Successful", "Welcome, " + username + "!");
+        if (authenticate(username1, password)) {
+            showAlert("Login Successful", "Welcome, " + username1 + "!");
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("fitnessTracker.fxml"));
+                Parent nextRoot = loader.load();
+                NextPageController nextPageController = loader.getController();
+                ObservableList<Logs> data = nextPageController.getDataFromDatabase(username1);
+                nextPageController.setDataInTable(data);
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+                Scene scene = new Scene(nextRoot,700,700);
+                stage.setScene(scene);
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
-            // Invalid login, show an error message.
             showAlert("Login Failed", "Invalid username or password.");
         }
     }
