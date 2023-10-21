@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="452.0" prefWidth="668.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jproject.NextPageController">
+    <TableView fx:id="table" layoutX="34.0" layoutY="18.0" prefHeight="400.0" prefWidth="600.0">
+        <columns>
+            <TableColumn fx:id="LogID" prefWidth="136.00000762939453" text="Log ID" />
+            <TableColumn fx:id="LogDate" prefWidth="136.00000762939453" text="Log Date" />
+            <TableColumn fx:id="duration" prefWidth="138.4000244140625" text="Duration" />
+        </columns>
+   </TableView>
+</AnchorPane>
