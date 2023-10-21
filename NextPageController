@@ -1,0 +1,64 @@
+package com.example.jproject;
+
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.collections.ObservableList;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ResourceBundle;
+import javafx.fxml.Initializable;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+public class NextPageController implements Initializable {
+    @FXML
+    public TableView<Logs> table;
+    @FXML
+    public TableColumn<Logs, Integer> LogID;
+    @FXML
+    public TableColumn<Logs, Integer> LogDate;
+    @FXML
+    public TableColumn<Logs, Integer> duration;
+
+    private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
+    private static final String username = "postgres";
+    private static final String password = "shreya123";
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        LogID.setCellValueFactory(new PropertyValueFactory<>("LogID"));
+        LogDate.setCellValueFactory(new PropertyValueFactory<>("LogDate"));
+        duration.setCellValueFactory(new PropertyValueFactory<>("Duration"));
+    }
+
+    public void setDataInTable(ObservableList<Logs> data) {
+        table.setItems(data);
+    }
+
+    ObservableList<Logs> getDataFromDatabase(String username1) {
+        ObservableList<Logs> data = FXCollections.observableArrayList();
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password);
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT log_id, log_date, duration_minutes FROM exercise_logs el INNER JOIN users u ON el.user_id = u.user_id WHERE u.username = ?")) {
+            statement.setString(1, username1);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Logs log = new Logs();
+                log.setLogID(resultSet.getInt("log_id"));
+                log.setLogDate(resultSet.getString("log_date"));
+                log.setDuration(resultSet.getInt("duration_minutes"));
+                data.add(log);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+}
