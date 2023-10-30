@@ -39,6 +39,7 @@
                 </Text>
             <FontAwesomeIcon glyphName="USER" layoutX="86.0" layoutY="221.0" size="16" />
             <FontAwesomeIcon glyphName="KEY" layoutX="85.0" layoutY="275.0" size="16" />
+            <Button layoutX="117.0" layoutY="381.0" mnemonicParsing="false" onAction="#addUser2" style="-fx-background-color: black;" text="Register" textFill="#962a2a" />
             </children>
         </AnchorPane>
     </right>
