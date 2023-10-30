@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.sql.*;
+import java.util.Optional;
 
 public class LoginController{
     @FXML
@@ -21,6 +22,87 @@ public class LoginController{
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
+    public void addUser2(ActionEvent event) {
+        User newUser = captureUserInput();
+        insertUserIntoDatabase(newUser);
+    }
+
+    private User captureUserInput() {
+        TextInputDialog usernameDialog = new TextInputDialog();
+        usernameDialog.setTitle("New User Input");
+        usernameDialog.setHeaderText("Enter data for the new user:");
+        usernameDialog.setContentText("Username:");
+        Optional<String> usernameResult = usernameDialog.showAndWait();
+
+        TextInputDialog emailDialog = new TextInputDialog();
+        emailDialog.setTitle("New User Input");
+        emailDialog.setHeaderText("Enter data for the new user:");
+        emailDialog.setContentText("Email:");
+        Optional<String> emailResult = emailDialog.showAndWait();
+
+        TextInputDialog phoneDialog = new TextInputDialog();
+        phoneDialog.setTitle("New User Input");
+        phoneDialog.setHeaderText("Enter data for the new user:");
+        phoneDialog.setContentText("Phone:");
+        Optional<String> phoneResult = phoneDialog.showAndWait();
+
+        TextInputDialog passwordDialog = new TextInputDialog();
+        passwordDialog.setTitle("New User Input");
+        passwordDialog.setHeaderText("Enter data for the new user:");
+        passwordDialog.setContentText("Password:");
+        Optional<String> passwordResult = passwordDialog.showAndWait();
+
+        if (usernameResult.isPresent() && emailResult.isPresent() && phoneResult.isPresent() && passwordResult.isPresent()) {
+            String username = usernameResult.get();
+            String email = emailResult.get();
+            String phone = phoneResult.get();
+            String password = passwordResult.get();
+
+            User newUser = new User();
+            newUser.setUsername(username);
+            newUser.setEmail(email);
+            newUser.setPhone(phone);
+            newUser.setPassword(password);
+            return newUser;
+        } else {
+            return null;
+        }
+    }
+
+    private void insertUserIntoDatabase(User user) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(jdbcURL, username, password);
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO users (username, email, phone, password_hash) VALUES (?, ?, ?, ?)")) {
+                statement.setString(1, user.getUsername());
+                statement.setString(2, user.getEmail());
+                statement.setString(3, user.getPhone());
+                statement.setString(4, user.getPassword());
+
+                int updatedRows = statement.executeUpdate();
+                if (updatedRows > 0) {
+                    connection.commit();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                connection.rollback();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void handleLoginButtonAction(ActionEvent event) throws IOException {
         String username1 = usernameField.getText();
         String password = passwordField.getText();
