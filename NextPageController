@@ -7,20 +7,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.collections.ObservableList;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
@@ -46,15 +42,110 @@ public class NextPageController implements Initializable {
         username1 = username;
     }
 
+    public void addNewRow(ActionEvent event) {
+        Logs newLog = captureUserInput();
+        table.getItems().add(newLog);
+        assert newLog != null;
+        insertLogIntoDatabase(newLog);
+    }
+
+    private Logs captureUserInput() {
+        TextInputDialog logDateDialog = new TextInputDialog();
+        logDateDialog.setTitle("New Row Input");
+        logDateDialog.setHeaderText("Enter data for the new row:");
+        logDateDialog.setContentText("Log Date:");
+        Optional<String> logDateResult = logDateDialog.showAndWait();
+
+        TextInputDialog durationDialog = new TextInputDialog();
+        durationDialog.setTitle("New Row Input");
+        durationDialog.setHeaderText("Enter data for the new row:");
+        durationDialog.setContentText("Duration:");
+        Optional<String> durationResult = durationDialog.showAndWait();
+
+        TextInputDialog setDialog = new TextInputDialog();
+        setDialog.setTitle("New Row Input");
+        setDialog.setHeaderText("Enter data for the new row:");
+        setDialog.setContentText("sets:");
+        Optional<String> SetsResult = setDialog.showAndWait();
+
+        TextInputDialog repDialog = new TextInputDialog();
+        repDialog.setTitle("New Row Input");
+        repDialog.setHeaderText("Enter data for the new row:");
+        repDialog.setContentText("reps:");
+        Optional<String> repsResult = repDialog.showAndWait();
+
+        if (logDateResult.isPresent() && durationResult.isPresent() && SetsResult.isPresent() && repsResult.isPresent()) {
+            String logDate = logDateResult.get();
+            int duration = Integer.parseInt(durationResult.get());
+            int sets = Integer.parseInt(SetsResult.get());
+            int reps = Integer.parseInt(repsResult.get());
+            Logs newLog = new Logs();
+            newLog.setLogDate(logDate);
+            newLog.setDuration(duration);
+            newLog.setSets(sets);
+            newLog.setReps(reps);
+            return newLog;
+        } else {
+            return null;
+        }
+    }
+    private void insertLogIntoDatabase(Logs log) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(jdbcURL, username, password);
+            connection.setAutoCommit(false);
+            int userId = getUserIdByUsername(connection, username1);
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO exercise_logs (log_date, duration_minutes, sets, reps, user_id) VALUES (?, ?, ?, ?, ?)")) {
+                statement.setString(1, log.getLogDate());
+                statement.setInt(2, log.getDuration());
+                statement.setInt(3, log.getSets());
+                statement.setInt(4, log.getReps());
+                statement.setInt(5, userId);
+
+                int updatedRows = statement.executeUpdate();
+                if (updatedRows > 0) {
+                    connection.commit();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                connection.rollback();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private int getUserIdByUsername(Connection connection, String username) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT user_id FROM users WHERE username = ?")) {
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("user_id");
+            } else {
+                return -1;
+            }
+        }
+    }
+
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         LogID.setCellValueFactory(new PropertyValueFactory<>("LogID"));
         LogDate.setCellValueFactory(new PropertyValueFactory<>("LogDate"));
         duration.setCellValueFactory(new PropertyValueFactory<>("Duration"));
         sets.setCellValueFactory(new PropertyValueFactory<>("sets"));
-        reps.setCellValueFactory(new PropertyValueFactory<>("Reps"));
-        //ObservableList<Logs> data = getDataFromDatabase(username);
-        //table.setItems(data);
+        reps.setCellValueFactory(new PropertyValueFactory<>("reps"));
     }
 
     public void setDataInTable(ObservableList<Logs> data) {
@@ -89,7 +180,9 @@ public class NextPageController implements Initializable {
             FitnessGoalsController fitnessGoalsController = loader.getController();
             ObservableList<fitness> data = fitnessGoalsController.getDataFromDatabase1(username1);
             fitnessGoalsController.setDataInTable(data);
+            fitnessGoalsController.setUsernameFromLogin(username1);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setTitle("Fitness Goals");
             Scene scene = new Scene(fitnessGoalsRoot);
             stage.setScene(scene);
             stage.show();
