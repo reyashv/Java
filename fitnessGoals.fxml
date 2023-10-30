@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
-            prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.jproject.FitnessGoalsController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jproject.FitnessGoalsController">
     <TableView fx:id="table" layoutX="46.0" layoutY="55.0" prefHeight="297.0" prefWidth="506.0">
       <columns>
-          <TableColumn fx:id="GoalID" prefWidth="96.0" text="Goal ID"/>
-          <TableColumn fx:id="GoalType" prefWidth="104.800048828125" text="Goal Type"/>
-          <TableColumn fx:id="TargetVal" prefWidth="101.5999755859375" text="Target Value"/>
-          <TableColumn fx:id="TargetDate" prefWidth="104.79998779296875" text="Target Date"/>
-          <TableColumn fx:id="Achieved" prefWidth="97.60003662109375" text="Achieved"/>
+          <TableColumn fx:id="GoalID" prefWidth="96.0" text="Goal ID" />
+          <TableColumn fx:id="GoalType" prefWidth="104.800048828125" text="Goal Type" />
+          <TableColumn fx:id="TargetVal" prefWidth="101.5999755859375" text="Target Value" />
+          <TableColumn fx:id="TargetDate" prefWidth="104.79998779296875" text="Target Date" />
+          <TableColumn fx:id="Achieved" prefWidth="97.60003662109375" text="Achieved" />
       </columns>
     </TableView>
+   <Button layoutX="46.0" layoutY="360.0" mnemonicParsing="false" onAction="#addNewRow1" text="Add Goals" />
 </AnchorPane>
