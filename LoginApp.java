@@ -15,7 +15,6 @@ public class LoginApp extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("hello-view.fxml"));
         Parent root = loader.load();
         LoginController loginController = loader.getController();
-        loginController.setHostServices(getHostServices());
         primaryStage.setTitle("Login Page");
         primaryStage.setScene(new Scene(root, 700, 700));
         primaryStage.show();
