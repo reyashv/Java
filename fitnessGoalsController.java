@@ -1,73 +1,83 @@
 package com.example.jproject;
-import java.io.*;
+import java.io.IOException;
 import java.lang.*;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.collections.ObservableList;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ResourceBundle;
-import javafx.fxml.Initializable;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
+import java.sql.*;
 
-public class FitnessGoalsController implements Initializable {
+public class LoginController{
     @FXML
-    public TableView<fitness> table;
+    private TextField usernameField;
     @FXML
-    public TableColumn<fitness, Integer> GoalID;
+    private PasswordField passwordField;
     @FXML
-    public TableColumn<fitness, String> GoalType;
-    @FXML
-    public TableColumn<fitness, Double> TargetVal;
-    @FXML
-    public TableColumn<fitness, String> TargetDate;
-    @FXML
-    public TableColumn<fitness, Boolean> Achieved;
+    private Button loginButton;
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        GoalID.setCellValueFactory(new PropertyValueFactory<>("GoalID"));
-        GoalType.setCellValueFactory(new PropertyValueFactory<>("GoalType"));
-        TargetVal.setCellValueFactory(new PropertyValueFactory<>("TargetVal"));
-        TargetDate.setCellValueFactory(new PropertyValueFactory<>("TargetDate"));
-        Achieved.setCellValueFactory(new PropertyValueFactory<>("Achieved"));
-        //ObservableList<fitness> data = getDataFromDatabase1(username1);
-        //table.setItems(data);
-    }
-    ObservableList<fitness> getDataFromDatabase1(String username1) {
-        ObservableList<fitness> data = FXCollections.observableArrayList();
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password);
-             PreparedStatement statement = connection.prepareStatement(
-                     "SELECT goal_id, goal_type, target_value, target_date, achieved FROM fitness_goals el INNER JOIN users u ON el.user_id = u.user_id WHERE u.username = ?")) {
-            statement.setString(1, username1);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                fitness fit = new fitness();
-                fit.setGoalID(resultSet.getInt("goal_id"));
-                fit.setGoalType(resultSet.getString("goal_type"));
-                fit.setTargetVal(resultSet.getDouble("target_value"));
-                fit.setTargetDate(resultSet.getString("target_date"));
-                fit.setAchieved(resultSet.getBoolean("achieved"));
-                data.add(fit);
+    public void handleLoginButtonAction(ActionEvent event) throws IOException {
+        String username1 = usernameField.getText();
+        String password = passwordField.getText();
+        if (authenticate(username1, password)) {
+            showAlert("Login Successful", "Welcome, " + username1 + "!");
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("fitnessTracker.fxml"));
+                Parent nextRoot = loader.load();
+                NextPageController nextPageController = loader.getController();
+                ObservableList<Logs> data = nextPageController.getDataFromDatabase(username1);
+                nextPageController.setDataInTable(data);
+                nextPageController.setUsernameFromLogin(username1);
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+                stage.setTitle("Exercise logs");
+                Scene scene = new Scene(nextRoot);
+                stage.setScene(scene);
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        } else {
+            showAlert("Login Failed", "Invalid username or password.");
+        }
+    }
 
+    private static Connection connectToDatabase() throws SQLException {
+        return DriverManager.getConnection(jdbcURL, username, password);
+    }
+
+    private static boolean authenticate(String username, String password) {
+        try (Connection connection = connectToDatabase();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT username,user_id, password_hash FROM users WHERE username = ?")) {
+
+            statement.setString(1, username);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String storedPassword = resultSet.getString("password_hash");
+                int userID = resultSet.getInt("user_id");
+                String userName= resultSet.getString("username");
+                if (storedPassword.equals(password)) {
+                    return true;
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return data;
+        return false;
     }
 
-    public void setDataInTable(ObservableList<fitness> data) {
-        table.setItems(data);
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
