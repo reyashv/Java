@@ -1,11 +1,17 @@
 package com.example.jproject;
 
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.collections.ObservableList;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,7 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
 public class NextPageController implements Initializable {
     @FXML
@@ -25,27 +33,38 @@ public class NextPageController implements Initializable {
     public TableColumn<Logs, Integer> LogDate;
     @FXML
     public TableColumn<Logs, Integer> duration;
+    @FXML
+    public TableColumn<Logs, Integer> sets;
+    @FXML
+    public TableColumn<Logs, Integer> reps;
 
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
+    public String username1;
+    public void setUsernameFromLogin(String username) {
+        username1 = username;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         LogID.setCellValueFactory(new PropertyValueFactory<>("LogID"));
         LogDate.setCellValueFactory(new PropertyValueFactory<>("LogDate"));
         duration.setCellValueFactory(new PropertyValueFactory<>("Duration"));
+        sets.setCellValueFactory(new PropertyValueFactory<>("sets"));
+        reps.setCellValueFactory(new PropertyValueFactory<>("Reps"));
+        //ObservableList<Logs> data = getDataFromDatabase(username);
+        //table.setItems(data);
     }
 
     public void setDataInTable(ObservableList<Logs> data) {
         table.setItems(data);
     }
-
     ObservableList<Logs> getDataFromDatabase(String username1) {
         ObservableList<Logs> data = FXCollections.observableArrayList();
         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password);
              PreparedStatement statement = connection.prepareStatement(
-                     "SELECT log_id, log_date, duration_minutes FROM exercise_logs el INNER JOIN users u ON el.user_id = u.user_id WHERE u.username = ?")) {
+                     "SELECT log_id, log_date, duration_minutes, sets, reps FROM exercise_logs el INNER JOIN users u ON el.user_id = u.user_id WHERE u.username = ?")) {
             statement.setString(1, username1);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -53,6 +72,8 @@ public class NextPageController implements Initializable {
                 log.setLogID(resultSet.getInt("log_id"));
                 log.setLogDate(resultSet.getString("log_date"));
                 log.setDuration(resultSet.getInt("duration_minutes"));
+                log.setSets(resultSet.getInt("sets"));
+                log.setReps(resultSet.getInt("reps"));
                 data.add(log);
             }
 
@@ -60,5 +81,20 @@ public class NextPageController implements Initializable {
             e.printStackTrace();
         }
         return data;
+    }
+    public void fitnessGoals(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("fitnessGoals.fxml"));
+            Parent fitnessGoalsRoot = loader.load();
+            FitnessGoalsController fitnessGoalsController = loader.getController();
+            ObservableList<fitness> data = fitnessGoalsController.getDataFromDatabase1(username1);
+            fitnessGoalsController.setDataInTable(data);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(fitnessGoalsRoot);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
