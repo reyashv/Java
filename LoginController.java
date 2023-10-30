@@ -1,9 +1,6 @@
 package com.example.jproject;
 import java.io.IOException;
 import java.lang.*;
-
-import javafx.application.HostServices;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,10 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-
-import java.net.URL;
 import java.sql.*;
-import java.util.ResourceBundle;
 
 public class LoginController{
     @FXML
@@ -27,17 +21,6 @@ public class LoginController{
     private static final String jdbcURL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String username = "postgres";
     private static final String password = "shreya123";
-    @FXML
-    private Hyperlink myHyperlink;
-    private HostServices hostServices;
-    public void setHostServices(HostServices hostServices) {
-        this.hostServices = hostServices;
-    }
-    public void handleHyperlinkAction(ActionEvent event) {
-        System.out.println("Hyperlink clicked!");
-        String url = "https://www.openai.com";
-        hostServices.showDocument(url);
-    }
     public void handleLoginButtonAction(ActionEvent event) throws IOException {
         String username1 = usernameField.getText();
         String password = passwordField.getText();
@@ -51,7 +34,8 @@ public class LoginController{
                 nextPageController.setDataInTable(data);
                 nextPageController.setUsernameFromLogin(username1);
                 Stage stage = (Stage) loginButton.getScene().getWindow();
-                Scene scene = new Scene(nextRoot,700,700);
+                stage.setTitle("Exercise logs");
+                Scene scene = new Scene(nextRoot);
                 stage.setScene(scene);
                 stage.show();
             } catch (IOException e) {
