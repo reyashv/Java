@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="452.0" prefWidth="668.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jproject.NextPageController">
-    <TableView fx:id="table" layoutX="34.0" layoutY="18.0" prefHeight="400.0" prefWidth="600.0">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="383.0" prefWidth="632.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jproject.NextPageController">
+    <TableView fx:id="table" editable="true" layoutX="34.0" layoutY="18.0" prefHeight="298.0" prefWidth="554.0">
         <columns>
-            <TableColumn fx:id="LogID" prefWidth="136.00000762939453" text="Log ID" />
-            <TableColumn fx:id="LogDate" prefWidth="136.00000762939453" text="Log Date" />
-            <TableColumn fx:id="duration" prefWidth="138.4000244140625" text="Duration" />
+            <TableColumn fx:id="LogID" prefWidth="106.40002822875977" text="Log ID" />
+            <TableColumn fx:id="LogDate" prefWidth="125.60002136230469" text="Log Date" />
+            <TableColumn fx:id="duration" prefWidth="124.00006103515625" text="Duration" />
+            <TableColumn fx:id="sets" prefWidth="99.20001220703125" text="Sets" />
+            <TableColumn fx:id="reps" prefWidth="97.59991455078125" text="Reps" />
         </columns>
    </TableView>
+   <Button layoutX="503.0" layoutY="324.0" mnemonicParsing="false" onAction="#fitnessGoals" text="Fitness Goals" />
+   <Button layoutX="34.0" layoutY="324.0" mnemonicParsing="false" onAction="#addNewRow" text="Add Logs" />
 </AnchorPane>
